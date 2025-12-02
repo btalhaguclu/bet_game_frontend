@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<title>Günlük Bet Oyunu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+    :root {
+        --bg: #020617;
+        --card: #0b1120;
+        --accent: #38bdf8;
+        --accent-soft: rgba(56,189,248,0.18);
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --border: #1f2937;
+        --danger: #f97373;
+        --success: #4ade80;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        padding: 10px;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top, #020617, #000);
+        color: var(--text);
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+
+    header {
+        display: flex; flex-wrap: wrap; justify-content: space-between;
+        align-items: center; gap: 10px; margin-bottom: 15px;
+    }
+    .title { font-size: 1.4rem; font-weight: 700; }
+    .subtitle { font-size: 0.85rem; color: var(--muted); }
+
+    .auth-box {
+        display:flex; flex-direction:column; gap:4px; align-items:flex-end;
+        font-size: 0.85rem;
+    }
+
+    input[type="text"] {
+        background:#020617; border-radius:999px; border:1px solid var(--border);
+        color:var(--text); padding:6px 10px; font-size:0.85rem; outline:none;
+        min-width:120px;
+    }
+    input[type="text"]:focus {
+        border-color:var(--accent);
+        box-shadow:0 0 0 1px rgba(56,189,248,0.5);
+    }
+
+    button {
+        border-radius:999px; border:1px solid transparent;
+        background:var(--accent); color:#020617; padding:7px 11px;
+        font-size:0.8rem; cursor:pointer; font-weight:600;
+        display:inline-flex; align-items:center; gap:4px;
+        transition: transform .08s ease, box-shadow .1s ease, background .1s ease;
+    }
+    button:hover {
+        transform:translateY(-1px);
+        box-shadow:0 8px 18px rgba(56,189,248,0.4);
+        background:#0ea5e9;
+    }
+    button:disabled {
+        opacity:.4; cursor:default; transform:none; box-shadow:none;
+    }
+    .btn-secondary {
+        background:transparent; color:var(--accent); border-color:var(--accent);
+    }
+    .btn-danger {
+        background:transparent; color:var(--danger); border-color:var(--danger);
+    }
+
+    .section-grid {
+        display:grid; grid-template-columns: minmax(0,2fr) minmax(0,1.3fr); gap:12px;
+    }
+    @media (max-width:768px) {
+        .section-grid { grid-template-columns:1fr; }
+        header { flex-direction:column; align-items:flex-start; }
+        .auth-box { align-items:flex-start; }
+    }
+
+    .card {
+        background:rgba(15,23,42,0.96); border-radius:12px;
+        border:1px solid var(--border);
+        padding:12px 14px; margin-bottom:10px;
+        box-shadow:0 10px 25px rgba(0,0,0,0.7);
+    }
+    .card-header {
+        display:flex; justify-content:space-between;
+        align-items:center; gap:8px; margin-bottom:6px;
+    }
+    h2 { font-size:1rem; margin:0; }
+
+    .pill {
+        font-size:0.7rem; text-transform:uppercase; letter-spacing:.05em;
+        padding:2px 8px; border-radius:999px;
+        border:1px solid var(--accent); color:var(--accent);
+        background:var(--accent-soft);
+    }
+
+    .muted { font-size:0.8rem; color:var(--muted); }
+
+    .matches-list, .coupon-list {
+        display:flex; flex-direction:column; gap:7px;
+        margin-top:7px;
+    }
+
+    .match-card {
+        border-radius:10px; border:1px solid var(--border);
+        background:#020617; padding:9px;
+        display:flex; flex-direction:column; gap:4px; font-size:0.8rem;
+    }
+    .match-row {
+        display:flex; justify-content:space-between; align-items:center; gap:8px;
+    }
+    .teams { font-weight:600; }
+    .league { font-size:0.7rem; color:var(--muted); }
+
+    .odds { display:flex; gap:6px; flex-wrap:wrap; }
+    .odd-btn {
+        border-radius:999px; border:1px solid var(--border);
+        background:rgba(15,23,42,0.9); color:var(--muted);
+        padding:3px 7px; font-size:0.75rem; cursor:pointer;
+        display:inline-flex; gap:3px; align-items:center;
+    }
+    .odd-btn span { font-weight:600; color:var(--text); }
+    .odd-btn.active {
+        border-color:var(--accent); background:var(--accent-soft); color:var(--accent);
+    }
+
+    .coupon-item {
+        border-radius:10px; border:1px solid var(--border);
+        background:rgba(15,23,42,0.95); padding:8px;
+        font-size:0.82rem; display:flex; flex-direction:column; gap:3px;
+    }
+    .coupon-item.correct {
+        border-color:var(--success);
+        box-shadow:0 0 0 1px rgba(74,222,128,0.35);
+    }
+    .coupon-item.wrong {
+        border-color:var(--danger);
+        box-shadow:0 0 0 1px rgba(248,113,113,0.35);
+    }
+
+    .coupon-footer {
+        display:flex; justify-content:space-between; align-items:center;
+        margin-top:6px; font-size:0.8rem; color:var(--muted);
+    }
+    .coupon-total { font-weight:600; color:var(--accent); }
+
+    .points-display { font-size:1.1rem; font-weight:700; }
+
+    .leaderboard-table {
+        width:100%; border-collapse:collapse; font-size:0.8rem; margin-top:6px;
+    }
+    .leaderboard-table th,
+    .leaderboard-table td {
+        padding:5px 4px; text-align:left;
+    }
+    .leaderboard-table th {
+        font-weight:600; color:var(--muted); border-bottom:1px solid var(--border);
+    }
+    .leaderboard-table tr:nth-child(even) {
+        background:rgba(15,23,42,0.85);
+    }
+    .leaderboard-table tr.me {
+        background:rgba(56,189,248,0.08);
+    }
+
+    .status-bar { font-size:0.8rem; color:var(--muted); margin-top:4px; }
+
+    .toast {
+        position:fixed; bottom:16px; right:16px;
+        background:#020617; border-radius:999px;
+        border:1px solid var(--border);
+        padding:8px 14px; font-size:0.8rem;
+        display:none; align-items:center; gap:6px;
+        max-width:260px; box-shadow:0 10px 25px rgba(0,0,0,0.6); z-index:999;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div>
+            <div class="title">Günlük Bet Oyunu</div>
+            <div class="subtitle">
+                Gerçek backend ile, herkes farklı cihazdan girip aynı oyunu oynayabilir.
+            </div>
+        </div>
+        <div class="auth-box">
+            <div>Durum: <span id="authStatus" class="muted">Giriş yapmadın</span></div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                <input type="text" id="nameInput" placeholder="Oyuncu adın" />
+                <button id="registerBtn">Kayıt ol</button>
+                <button class="btn-secondary" id="logoutBtn" style="display:none;">Çıkış</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="section-grid">
+        <!-- Sol: Maçlar & Kupon -->
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <h2>Bugünün Maçları</h2>
+                    <span class="pill" id="datePill"></span>
+                </div>
+                <div class="muted">Kupon yapmak için bir sonuç seç (1 / X / 2).</div>
+                <div id="matchesList" class="matches-list"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Kuponum</h2>
+                    <div style="display:flex; gap:6px;">
+                        <button id="saveCouponBtn">Kuponu Kaydet</button>
+                        <button id="lockCouponBtn">Fişi Kestir</button>
+                    </div>
+                </div>
+                <div id="couponList" class="coupon-list"></div>
+                <div class="coupon-footer">
+                    <div>Toplam Oran: <span id="totalOdd" class="coupon-total">1.00</span></div>
+                    <div id="couponStatus" class="muted"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ: Puan & Leaderboard -->
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <h2>Puan Durumun</h2>
+                </div>
+                <div class="points-display">
+                    <span id="pointsValue">0</span> puan
+                </div>
+                <div class="status-bar">
+                    1) Maçları seç → 2) Kuponu Kaydet → 3) Fişi Kestir → 4) Sonucu Çek.
+                </div>
+                <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+                    <button id="evaluateBtn">Sonuçları Çek</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Liderlik Tablosu</h2>
+                </div>
+                <table class="leaderboard-table" id="leaderboardTable"></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+(function() {
+    const API_BASE = ""; // aynı origin; backend ve frontend aynı domain/portta
+
+    let authToken = null;
+    let matches = [];
+    let currentCoupon = null; // {id, items, locked, evaluated,...}
+
+    // =========== Utils ===========
+    function showToast(msg) {
+        const el = document.getElementById("toast");
+        el.textContent = msg;
+        el.style.display = "flex";
+        setTimeout(() => el.style.display = "none", 2000);
+    }
+
+    function setAuthToken(token) {
+        authToken = token;
+        if (token) {
+            localStorage.setItem("betAuthToken", token);
+        } else {
+            localStorage.removeItem("betAuthToken");
+        }
+    }
+
+    async function api(path, options = {}) {
+        const headers = options.headers || {};
+        headers["Content-Type"] = "application/json";
+        if (authToken) headers["X-Auth-Token"] = authToken;
+        const res = await fetch(API_BASE + path, {
+            ...options,
+            headers
+        });
+        if (!res.ok) {
+            let err = "Hata";
+            try {
+                const data = await res.json();
+                if (data.error) err = data.error;
+            } catch(e) {}
+            throw new Error(err);
+        }
+        return res.json();
+    }
+
+    // ========== Auth ==========
+    async function register() {
+        const nameInput = document.getElementById("nameInput");
+        const name = nameInput.value.trim();
+        if (!name) {
+            showToast("Önce bir oyuncu adı yaz.");
+            return;
+        }
+        try {
+            const data = await api("/api/register", {
+                method: "POST",
+                body: JSON.stringify({ name })
+            });
+            setAuthToken(data.token);
+            document.getElementById("authStatus").textContent =
+                `Giriş yaptın: ${data.name} (${data.points} puan)`;
+            document.getElementById("pointsValue").textContent = data.points;
+            document.getElementById("logoutBtn").style.display = "inline-flex";
+            showToast("Kayıt oldun ve giriş yaptın.");
+            await reloadAll();
+        } catch(err) {
+            showToast(err.message);
+        }
+    }
+
+    async function tryLoginFromStorage() {
+        const token = localStorage.getItem("betAuthToken");
+        if (!token) return;
+        try {
+            const data = await api("/api/login", {
+                method: "POST",
+                body: JSON.stringify({ token })
+            });
+            setAuthToken(data.token);
+            document.getElementById("authStatus").textContent =
+                `Giriş yaptın: ${data.name} (${data.points} puan)`;
+            document.getElementById("pointsValue").textContent = data.points;
+            document.getElementById("logoutBtn").style.display = "inline-flex";
+        } catch(err) {
+            setAuthToken(null);
+        }
+    }
+
+    function logout() {
+        setAuthToken(null);
+        document.getElementById("authStatus").textContent = "Giriş yapmadın";
+        document.getElementById("logoutBtn").style.display = "none";
+        document.getElementById("pointsValue").textContent = "0";
+        currentCoupon = null;
+        renderMatches();
+        renderCoupon();
+        renderLeaderboard([]);
+        showToast("Çıkış yapıldı.");
+    }
+
+    // ========== Matches ==========
+    async function loadMatches() {
+        const data = await api("/api/matches/today");
+        matches = data.matches || [];
+        document.getElementById("datePill").textContent = data.date;
+    }
+
+    function renderMatches() {
+        const list = document.getElementById("matchesList");
+        list.innerHTML = "";
+
+        if (!matches || matches.length === 0) {
+            list.innerHTML = `<div class="muted">Bugün için maç bulunamadı.</div>`;
+            return;
+        }
+
+        const locked = currentCoupon && currentCoupon.locked;
+        const evaluated = currentCoupon && currentCoupon.evaluated;
+
+        matches.forEach(m => {
+            const card = document.createElement("div");
+            card.className = "match-card";
+
+            const row = document.createElement("div");
+            row.className = "match-row";
+
+            const left = document.createElement("div");
+            left.innerHTML = `
+                <div class="teams">${m.home} - ${m.away}</div>
+                <div class="league">${m.league}</div>
+            `;
+
+            const right = document.createElement("div");
+            right.className = "odds";
+
+            const currentItem = currentCoupon && currentCoupon.items
+                ? currentCoupon.items.find(it => it.matchId === m.id)
+                : null;
+
+            ["1","X","2"].forEach(type => {
+                const btn = document.createElement("button");
+                btn.className = "odd-btn";
+                const oddVal = type === "1" ? m.odd1 : (type === "X" ? m.oddX : m.odd2);
+                btn.innerHTML = `<span>${type}</span> ${oddVal.toFixed(2)}`;
+
+                if (currentItem && currentItem.prediction === type) {
+                    btn.classList.add("active");
+                }
+
+                btn.disabled = locked || evaluated;
+
+                btn.addEventListener("click", () => {
+                    if (locked || evaluated) return;
+                    selectPrediction(m.id, type);
+                });
+
+                right.appendChild(btn);
+            });
+
+            row.appendChild(left);
+            row.appendChild(right);
+            card.appendChild(row);
+            list.appendChild(card);
+        });
+    }
+
+    function selectPrediction(matchId, prediction) {
+        if (!currentCoupon) {
+            currentCoupon = {
+                id: null,
+                items: [],
+                locked: false,
+                evaluated: false
+            };
+        }
+        const existing = currentCoupon.items.find(it => it.matchId === matchId);
+        const m = matches.find(mm => mm.id === matchId);
+        if (!m) return;
+        let odd = 1.0;
+        if (prediction === "1") odd = m.odd1;
+        else if (prediction === "X") odd = m.oddX;
+        else if (prediction === "2") odd = m.odd2;
+
+        if (existing) {
+            existing.prediction = prediction;
+            existing.odd = odd;
+        } else {
+            currentCoupon.items.push({ matchId, prediction, odd });
+        }
+        renderMatches();
+        renderCoupon();
+    }
+
+    // ========== Coupon ==========
+    function renderCoupon(resultsMap) {
+        const list = document.getElementById("couponList");
+        list.innerHTML = "";
+        const statusEl = document.getElementById("couponStatus");
+        const lockBtn = document.getElementById("lockCouponBtn");
+        const saveBtn = document.getElementById("saveCouponBtn");
+
+        if (!currentCoupon || !currentCoupon.items || currentCoupon.items.length === 0) {
+            list.innerHTML = `<div class="muted">Kupon boş.</div>`;
+            document.getElementById("totalOdd").textContent = "1.00";
+            statusEl.textContent = "Henüz maç seçmedin.";
+            lockBtn.disabled = true;
+            saveBtn.disabled = true;
+            return;
+        }
+
+        const locked = currentCoupon.locked;
+        const evaluated = currentCoupon.evaluated;
+
+        currentCoupon.items.forEach(it => {
+            const m = matches.find(mm => mm.id === it.matchId);
+            const div = document.createElement("div");
+            div.className = "coupon-item";
+
+            const top = document.createElement("div");
+            top.textContent = m ? `${m.home} - ${m.away}` : `Maç ${it.matchId}`;
+
+            const mid = document.createElement("div");
+            mid.className = "muted";
+            mid.textContent = `Tahmin: ${it.prediction} • Oran: ${it.odd.toFixed(2)}`;
+            div.appendChild(top);
+            div.appendChild(mid);
+
+            if (evaluated && resultsMap) {
+                const resVal = resultsMap[it.matchId];
+                if (resVal) {
+                    const bottom = document.createElement("div");
+                    bottom.style.marginTop = "3px";
+                    const correct = resVal === it.prediction;
+                    bottom.innerHTML = `Sonuç: <b>${resVal}</b> • ${correct ? "Doğru" : "Yanlış"}`;
+                    div.appendChild(bottom);
+                    div.classList.add(correct ? "correct" : "wrong");
+                }
+            }
+
+            list.appendChild(div);
+        });
+
+        const totalOdd = currentCoupon.items.reduce((p, c) => p * c.odd, 1) || 1;
+        document.getElementById("totalOdd").textContent = totalOdd.toFixed(2);
+
+        if (evaluated) {
+            statusEl.textContent = "Bu günün kuponu değerlendirildi.";
+            lockBtn.disabled = true;
+            saveBtn.disabled = true;
+        } else if (locked) {
+            statusEl.textContent = "Kupon kilitli. Sonuçları bekliyorsun.";
+            lockBtn.disabled = true;
+            saveBtn.disabled = true;
+        } else {
+            statusEl.textContent = "Kupon serbest, değişiklik yapabilirsin.";
+            lockBtn.disabled = false;
+            saveBtn.disabled = false;
+        }
+    }
+
+    async function saveCoupon() {
+        if (!currentCoupon || !currentCoupon.items || currentCoupon.items.length === 0) {
+            showToast("Önce maç seç.");
+            return;
+        }
+        try {
+            const payload = {
+                items: currentCoupon.items.map(it => ({
+                    matchId: it.matchId,
+                    prediction: it.prediction
+                }))
+            };
+            const data = await api("/api/coupon", {
+                method: "POST",
+                body: JSON.stringify(payload)
+            });
+            currentCoupon = data.coupon;
+            showToast("Kupon kaydedildi.");
+            renderMatches();
+            renderCoupon();
+        } catch(err) {
+            showToast(err.message);
+        }
+    }
+
+    async function lockCoupon() {
+        if (!currentCoupon || !currentCoupon.items || currentCoupon.items.length === 0) {
+            showToast("Önce kupon yap.");
+            return;
+        }
+        try {
+            const data = await api("/api/coupon/lock", {
+                method: "POST"
+            });
+            currentCoupon = data.coupon;
+            showToast("Fiş kesildi, kupon kilitlendi.");
+            renderMatches();
+            renderCoupon();
+        } catch(err) {
+            showToast(err.message);
+        }
+    }
+
+    async function loadTodayCoupon() {
+        try {
+            const data = await api("/api/coupon/today");
+            currentCoupon = data.coupon;
+        } catch(err) {
+            currentCoupon = null;
+        }
+    }
+
+    // ========== Sonuç & Puan ==========
+    async function evaluate() {
+        try {
+            const data = await api("/api/results/evaluate", { method: "POST" });
+            currentCoupon = data.coupon;
+            document.getElementById("pointsValue").textContent = data.totalPoints;
+            document.getElementById("authStatus").textContent =
+                `Giriş yaptın • Toplam puan: ${data.totalPoints}`;
+            renderMatches();
+            renderCoupon(data.results);
+            await loadLeaderboard();
+            if (data.gainedPoints > 0) {
+                showToast(`Tebrikler, kazandığın puan: ${data.gainedPoints}`);
+            } else {
+                showToast("Kupon patladı.");
+            }
+        } catch(err) {
+            showToast(err.message);
+        }
+    }
+
+    // ========== Leaderboard ==========
+    function renderLeaderboard(players) {
+        const table = document.getElementById("leaderboardTable");
+        table.innerHTML = "";
+        const head = document.createElement("tr");
+        head.innerHTML = "<th>#</th><th>Oyuncu</th><th>Puan</th>";
+        table.appendChild(head);
+
+        if (!players || players.length === 0) return;
+
+        const myToken = authToken;
+        players.forEach((p, idx) => {
+            const tr = document.createElement("tr");
+            if (myToken && p.token === myToken) {
+                tr.classList.add("me");
+            }
+            tr.innerHTML = `<td>${idx + 1}</td><td>${p.name}</td><td>${p.points}</td>`;
+            table.appendChild(tr);
+        });
+    }
+
+    async function loadLeaderboard() {
+        try {
+            const data = await api("/api/leaderboard");
+            // token field yok, ama "me" satırını renklemek için token gerekirdi.
+            // Basit tutup sadece isim/puan gösteriyoruz.
+            renderLeaderboard(data.players);
+        } catch(err) {
+            // sessiz
+        }
+    }
+
+    // ========== Hepsini Yenile ==========
+    async function reloadAll() {
+        if (!authToken) return;
+        await loadMatches();
+        await loadTodayCoupon();
+        renderMatches();
+        renderCoupon();
+        await loadLeaderboard();
+    }
+
+    // ========== Init ==========
+    function initEvents() {
+        document.getElementById("registerBtn").addEventListener("click", register);
+        document.getElementById("logoutBtn").addEventListener("click", logout);
+        document.getElementById("saveCouponBtn").addEventListener("click", saveCoupon);
+        document.getElementById("lockCouponBtn").addEventListener("click", lockCoupon);
+        document.getElementById("evaluateBtn").addEventListener("click", evaluate);
+    }
+
+    async function init() {
+        initEvents();
+        await tryLoginFromStorage();
+        if (authToken) {
+            await reloadAll();
+        } else {
+            // Login yokken de günün maçlarını gösterebiliriz (ama kupon kaydedemez)
+            try {
+                const data = await api("/api/matches/today");
+                matches = data.matches || [];
+                document.getElementById("datePill").textContent = data.date;
+                renderMatches();
+                renderCoupon();
+            } catch(err) {
+                // Boş geç
+            }
+        }
+        await loadLeaderboard();
+    }
+
+    init();
+})();
+</script>
+</body>
+</html>
