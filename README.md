@@ -1,2 +1,3 @@
-# bet_game_frontend
-bet_game_frontend
+# bet_game
+
+- This project has been created for testing purposes.
